@@ -1,6 +1,15 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Operation {
+    Create(Event),
+    Remove(EventFilter),
+    Update(EventFilter, Event),
+    Query(EventFilter),
+    None
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum EventTrigger {
     Always,
@@ -22,18 +31,21 @@ pub enum TimeComponent {
     SecondMinute(u8),
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Tag {
-    action: String,
+    pub action: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Event {
-    trigger: EventTrigger,
-    name: String,
-    data: HashMap<String, String>,
-    tags: Vec<String>,
+    pub trigger: EventTrigger,
+    pub name: String,
+    pub data: HashMap<String, String>,
+    pub tags: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EventFilter {
-    trigger: EventTrigger,
-    tags: Vec<String>,
+    pub trigger: EventTrigger,
+    pub tags: Vec<String>,
 }
