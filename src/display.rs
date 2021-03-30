@@ -1,13 +1,46 @@
 use std::fmt::Display;
 
-use crate::event::{Event, EventTrigger, TimeComponent};
+use crate::event::{Event, EventFilter, EventTrigger, Operation, TimeComponent};
+
+pub fn ident(s: String) -> String {
+    return format!("\t{}", s).replace("\n", "\n\t");
+}
+
+impl Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Operation::Create(ev) => format!("create event: \n{}", ident(format!("{:#}", ev))),
+            Operation::Remove(evf) => format!(
+                "remove event matched by a filter: \n{}",
+                ident(format!("{:#}", evf))
+            ),
+            Operation::Update(evf, ev) => format!(
+                "Update (aka replace) events matched by a filter with: \n{}\n{}",
+                ident(format!("{:#}", evf)),
+                ident(format!("{:#}", ev))
+            ),
+            Operation::Query(evf) => format!(
+                "show every event matched by a filter: \n{}",
+                ident(format!("{:#}", evf))
+            ),
+            Operation::None => format!("nothing aka no-op"),
+        };
+        f.write_fmt(format_args!("{}", s))
+    }
+}
+
+impl Display for EventFilter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
+}
 
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
             "{}:\n\ttrigger: \n\t{}\n\ttags: {}",
             self.name,
-            format!("\t{:#}", self.trigger).replace("\n", "\n\t"),
+            ident(format!("\t{:#}", self.trigger)),
             self.tags.join(", ")
         ))
     }
@@ -27,14 +60,14 @@ impl Display for EventTrigger {
             EventTrigger::OneOf(cs) => format!(
                 "when one of the condition matches: {}",
                 cs.iter()
-                    .map(|e| format!("\t{:#}", e).replace("\n", "\n\t"))
+                    .map(|e| ident(format!("\t{:#}", e)))
                     .collect::<Vec<_>>()
                     .join("\n")
             ),
             EventTrigger::AllOf(cs) => format!(
                 "when all condition match: {}",
                 cs.iter()
-                    .map(|e| format!("\t{:#}", e).replace("\n", "\n\t"))
+                    .map(|e| ident(format!("\t{:#}", e)))
                     .collect::<Vec<_>>()
                     .join("\n")
             ),
