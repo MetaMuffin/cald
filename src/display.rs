@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::event::{Event, EventFilter, EventTrigger, Operation, TimeComponent};
 
 pub fn ident(s: String) -> String {
-    return format!("\t{}", s).replace("\n", "\n\t");
+    return format!("  {}", s).replace("\n", "\n  ");
 }
 
 impl Display for Operation {
@@ -38,9 +38,9 @@ impl Display for EventFilter {
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
-            "{}:\n\ttrigger: \n\t{}\n\ttags: {}",
+            "{}:\n  trigger:\n  {}\n  tags: {}",
             self.name,
-            ident(format!("\t{:#}", self.trigger)),
+            ident(format!("{:#}", self.trigger)),
             self.tags.join(", ")
         ))
     }
@@ -60,14 +60,14 @@ impl Display for EventTrigger {
             EventTrigger::OneOf(cs) => format!(
                 "when one of the condition matches: {}",
                 cs.iter()
-                    .map(|e| ident(format!("\t{:#}", e)))
+                    .map(|e| ident(format!("  {:#}", e)))
                     .collect::<Vec<_>>()
                     .join("\n")
             ),
             EventTrigger::AllOf(cs) => format!(
                 "when all condition match: {}",
                 cs.iter()
-                    .map(|e| ident(format!("\t{:#}", e)))
+                    .map(|e| ident(format!("  {:#}", e)))
                     .collect::<Vec<_>>()
                     .join("\n")
             ),
