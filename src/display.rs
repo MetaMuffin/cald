@@ -58,14 +58,14 @@ impl Display for EventTrigger {
                 v.get_value()
             ),
             EventTrigger::OneOf(cs) => format!(
-                "when one of the condition matches: {}",
+                "when one of the condition matches:\n{}",
                 cs.iter()
                     .map(|e| ident(format!("  {:#}", e)))
                     .collect::<Vec<_>>()
                     .join("\n")
             ),
             EventTrigger::AllOf(cs) => format!(
-                "when all condition match: {}",
+                "when all condition match:\n{}",
                 cs.iter()
                     .map(|e| ident(format!("  {:#}", e)))
                     .collect::<Vec<_>>()
@@ -96,6 +96,7 @@ impl TimeComponent {
             TimeComponent::HourDay(_) => String::from("hour"),
             TimeComponent::MinuteHour(_) => String::from("minute"),
             TimeComponent::SecondMinute(_) => String::from("second"),
+            TimeComponent::WeekYear(_) => String::from("week of the year"),
         }
     }
     pub fn get_value(&self) -> u32 {
@@ -107,6 +108,7 @@ impl TimeComponent {
             TimeComponent::HourDay(v) => *v as u32,
             TimeComponent::MinuteHour(v) => *v as u32,
             TimeComponent::SecondMinute(v) => *v as u32,
+            TimeComponent::WeekYear(v) => *v as u32,
         }
     }
 }

@@ -10,7 +10,7 @@ pub enum Operation {
     None
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum EventTrigger {
     Always,
     Never,
@@ -20,10 +20,11 @@ pub enum EventTrigger {
     AllOf(Vec<EventTrigger>),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum TimeComponent {
     Years(u32),
     MonthYear(u8),
+    WeekYear(u8),
     DayMonth(u8),
     DayWeek(u8),
     HourDay(u8),
