@@ -74,19 +74,66 @@ pub fn cli_main(mut args: Vec<String>) {
 pub fn parse_event_trigger(s: &str) -> EventTrigger {
     let mut trigger = EventTrigger::Never;
     let mut buf_num = None;
-    let mut buf_divisible = false;
+    let mut buf_divisible_mode = false;
+    let mut buf_all_of_mode = false;
+    let mut buf_params: Option<Vec<String>> = None;
+    let mut buf_bracket_level = 0;
     for c in s.chars() {
+        buf_bracket_level += match c {
+            '(' | '[' => 1,
+            ')' | ']' => -1,
+            _ => 0,
+        };
+        if buf_bracket_level != 0 {
+            if let Some(s) = &mut buf_params {
+                let i = s.len() - 1;
+                s[i].push(c);
+            }
+            if c != ',' && c != ')' && c != ']' && c != '(' && c != '[' {
+                continue;
+            }
+            if buf_bracket_level != 1 {
+                continue;
+            }
+        }
         match c {
+            ',' => {
+                if buf_bracket_level == 1 {
+                    match &mut buf_params {
+                        Some(p) => p.push(String::new()),
+                        None => panic!("Unexpected ','"),
+                    }
+                }
+            }
+            '(' | '[' => {
+                buf_params = Some(vec![String::new()]);
+                buf_all_of_mode = c == '(';
+            }
+            ')' | ']' => {
+                if (c == ')') != buf_all_of_mode {
+                    eprintln!("deprecation warning: use of different bracket types")
+                }
+                let params = buf_params
+                    .clone()
+                    .expect("')' and ']' is only allowed after the corresponding '(' or '['")
+                    .iter()
+                    .map(|s| parse_event_trigger(s.as_str()))
+                    .collect::<Vec<_>>();
+                trigger = match buf_all_of_mode {
+                    true => EventTrigger::AllOf(params),
+                    false => EventTrigger::OneOf(params),
+                }
+            }
             '0'..='9' => match buf_num {
                 Some(n) => buf_num = Some(n * 10 + format!("{}", c).parse::<u32>().unwrap()),
                 None => buf_num = Some(format!("{}", c).parse::<u32>().unwrap()),
             },
             '-' => trigger = EventTrigger::Never,
-            '%' => buf_divisible = true,
+            '%' => buf_divisible_mode = true,
             'y' | 'M' | 'w' | 'D' | 'd' | 'h' | 'm' | 's' => {
                 if let Some(value) = buf_num {
                     let component = TimeComponent::from_unit_and_value(c, value);
-                    let new_trigger = match buf_divisible {
+                    let new_trigger = match buf_divisible_mode {
                         true => EventTrigger::Divisible(component),
                         false => EventTrigger::Is(component),
                     };
@@ -96,6 +143,7 @@ pub fn parse_event_trigger(s: &str) -> EventTrigger {
                         _ => trigger = EventTrigger::AllOf(vec![trigger, new_trigger]),
                     }
                     buf_num = None;
+                    buf_divisible_mode = false;
                 } else {
                     panic!("No number before the time unit")
                 }
