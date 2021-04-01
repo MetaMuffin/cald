@@ -1,3 +1,4 @@
+extern crate derive_more;
 extern crate lazy_static;
 use cald::{cli::cli_main, database::save_db};
 
