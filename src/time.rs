@@ -1,10 +1,12 @@
 use derive_more::{Add, Sub};
 
-// Unix timestamp wrapper
-#[derive(Add, Sub)]
-struct Time(u64);
+use crate::event::TimeComponent;
 
-struct TimeComponents {
+// Unix timestamp wrapper
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
+pub struct Time(pub u64);
+
+pub struct TimeComponents {
     year: u32,
     month: u8,
     week: u8,
@@ -16,7 +18,19 @@ struct TimeComponents {
     second: u8,
 }
 
+impl std::ops::Add for Time {
+    type Output = Time;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Time(self.0 + rhs.0)
+    }
+}
+
 impl Time {
+    pub fn value(&self) -> u64 {
+        self.0
+    }
+
     // Thanks to the german wikipedia article on unix time.
     pub fn from_components(
         jahr: u32,
@@ -43,7 +57,7 @@ impl Time {
         return sekunde as u64
             + 60 * (minute as u64 + 60 * (stunde as u64 + 24 * tage_seit_1970 as u64));
     }
-    
+
     // Thanks to the german wikipedia article on unix time.
     pub fn get_components(&self) -> TimeComponents {
         let seconds_per_day = 86400; /*  24* 60 * 60 */
@@ -57,10 +71,6 @@ impl Time {
         let mut temp;
         let mut year: u32;
         let mut month;
-        let mut day_month;
-        let mut minute;
-        let mut hour;
-        let mut second;
 
         // TODO
         let day_week = 0;
@@ -79,7 +89,7 @@ impl Time {
         day_n -= days_per_normal_year * temp + temp / 4;
         /* TagN enthaelt jetzt nur noch die Tage des errechneten Jahres bezogen auf den 1. Maerz. */
         month = (5 * day_n + 2) / 153;
-        day_month = day_n - (month * 153 + 2) / 5 + 1;
+        let day_month = day_n - (month * 153 + 2) / 5 + 1;
         /*  153 = 31+30+31+30+31 Tage fuer die 5 Monate von Maerz bis Juli
         153 = 31+30+31+30+31 Tage fuer die 5 Monate von August bis Dezember
         31+28          Tage fuer Januar und Februar (siehe unten)
@@ -92,9 +102,9 @@ impl Time {
             month -= 12;
             year += 1;
         }
-        hour = seconds_since_midnight / 3600;
-        minute = seconds_since_midnight % 3600 / 60;
-        second = seconds_since_midnight % 60;
+        let hour = seconds_since_midnight / 3600;
+        let minute = seconds_since_midnight % 3600 / 60;
+        let second = seconds_since_midnight % 60;
 
         TimeComponents {
             hour: hour as u8,
@@ -106,6 +116,33 @@ impl Time {
             second: second as u8,
             week: week as u8,
             year: year as u32,
+        }
+    }
+}
+
+impl TimeComponents {
+    pub fn value_of_component(&self, s: &TimeComponent) -> u32 {
+        match s {
+            TimeComponent::Years(_) => self.year,
+            TimeComponent::MonthYear(_) => self.month as u32,
+            TimeComponent::WeekYear(_) => self.day_week as u32,
+            TimeComponent::DayMonth(_) => self.day_month as u32,
+            TimeComponent::DayWeek(_) => self.day_week as u32,
+            TimeComponent::HourDay(_) => self.hour as u32,
+            TimeComponent::MinuteHour(_) => self.minute as u32,
+            TimeComponent::SecondMinute(_) => self.second as u32,
+        }
+    }
+    pub fn max_of_component(&self, s: &TimeComponent) -> Option<u32> {
+        match s {
+            TimeComponent::Years(_) => None,
+            TimeComponent::MonthYear(_) => Some(12),
+            TimeComponent::DayMonth(_) => Some(30), // TODO this should be 30, 31, 28 or 29 accordingly
+            TimeComponent::WeekYear(_) => Some(52), // TODO this is wrong too
+            TimeComponent::DayWeek(_) => Some(7),
+            TimeComponent::HourDay(_) => Some(24),
+            TimeComponent::MinuteHour(_) => Some(60),
+            TimeComponent::SecondMinute(_) => Some(60),
         }
     }
 }
