@@ -1,5 +1,6 @@
 use std::{io::Read, net::Shutdown, ops::Add};
 
+use crate::database::DB_CHANGE_CONDVAR;
 use chrono::{DateTime, Duration, Utc};
 use unix_socket::UnixListener;
 use users::get_current_uid;
@@ -66,14 +67,47 @@ impl EventTrigger {
             EventTrigger::OneOf(evts) => evts.iter().filter_map(|t| t.next_match(&after)).min(),
             EventTrigger::AllOf(evts) => {
                 //TODO make this effient by first evaluating the components with the longest interval
-                let n = 10;
-                let evals = evts.iter().map(|et| {
-                    let time = after.clone();
+                let mut top = evts
+                    .into_iter()
+                    .map(|et| (et, et.next_match(after)))
+                    .filter_map(|(et, t)| match t {
+                        Some(a) => Some((et, a)),
+                        None => None,
+                    })
+                    .collect::<Vec<_>>();
 
-                });
+                for _ in 0..100 {
+                    let mut last: Option<Time> = None;
+                    let mut all_match = true;
+                    for (_, t) in top.iter() {
+                        if let Some(l) = last {
+                            if l != *t {
+                                all_match = false;
+                            }
+                        }
+                        last = Some(*t)
+                    }
+                    if all_match {
+                        return Some(top[0].1);
+                    }
 
+                    let m = match top.iter().enumerate().min_by_key(|(_, (_, t))| t) {
+                        Some((i, _)) => i,
+                        None => return None,
+                    };
+
+                    let me = top[m].1 + Time::epsilon();
+                    match top[m].0.next_match(&me) {
+                        Some(t) => {
+                            top[m].1 = t;
+                        }
+                        None => {
+                            top.remove(m);
+                        }
+                    }
+                }
                 None
-            },
+            }
         }
     }
 }

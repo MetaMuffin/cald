@@ -1,9 +1,7 @@
-use derive_more::{Add, Sub};
-
 use crate::event::TimeComponent;
 
 // Unix timestamp wrapper
-#[derive(Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub struct Time(pub u64);
 
 pub struct TimeComponents {
@@ -117,6 +115,10 @@ impl Time {
             week: week as u8,
             year: year as u32,
         }
+    }
+
+    pub fn epsilon() -> Self {
+        return Self(1);
     }
 }
 

@@ -1,12 +1,14 @@
 use std::{fs::File, io::Write, sync::Mutex};
 
 use crate::event::{Event, Tag};
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use lazy_static::lazy_static;
+use std::sync::Condvar;
 
 lazy_static! {
     pub static ref DB_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
     pub static ref DB_TAGS: Mutex<Vec<Tag>> = Mutex::new(Vec::new());
+    pub static ref DB_CHANGE_CONDVAR: Condvar = Condvar::new();
 }
 
 #[derive(Debug, Serialize, Deserialize)]

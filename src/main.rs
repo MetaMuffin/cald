@@ -1,5 +1,7 @@
-extern crate derive_more;
+#[macro_use]
 extern crate lazy_static;
+
+extern crate derive_more;
 use cald::{cli::cli_main, database::save_db};
 
 fn main() {
