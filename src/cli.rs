@@ -55,7 +55,7 @@ pub fn cli_main(mut args: Vec<String>) {
                     "U" | "-update" | "-update-event" => {}
                     "Q" | "-query" | "-query-event" => {}
                     "D" | "-daemon" | "-deamon" => daemon_main(),
-                    _ => println!(),
+                    _ => eprintln!("Ignoring unknown flag: {}", aflag),
                 }
             }
         }
@@ -148,10 +148,7 @@ pub fn parse_event_trigger(s: &str) -> EventTrigger {
                     panic!("No number before the time unit")
                 }
             }
-            _ => panic!(format!(
-                "While parsing trigger literal an unexpected char was found: {:?}",
-                c
-            )),
+            _ => panic!("While parsing trigger literal an unexpected char was found"),
         }
     }
     return trigger;
@@ -168,7 +165,7 @@ impl TimeComponent {
             'h' => TimeComponent::HourDay(value as u8),
             'm' => TimeComponent::MinuteHour(value as u8),
             's' => TimeComponent::SecondMinute(value as u8),
-            _ => panic!(format!("Unexpected time component unit: {:?}", unit)),
+            _ => panic!("Unexpected time component unit"),
         }
     }
 }
