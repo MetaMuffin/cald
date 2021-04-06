@@ -31,7 +31,7 @@ impl Display for Operation {
 
 impl Display for EventFilter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        todo!() // todo implement std::fmt::Display for EventFilter
     }
 }
 
